@@ -3,7 +3,8 @@ import cv2
 import glob
 import os
 from basicsr.archs.rrdbnet_arch import RRDBNet
-from tqdm.notebook import tqdm
+
+from tqdm.auto import tqdm
 
 from realesrgan import RealESRGANer
 from realesrgan.archs.srvgg_arch import SRVGGNetCompact
@@ -96,9 +97,9 @@ def main():
     # skip directories from the path list
     paths = [path for path in paths if not os.path.isdir(path)]
     total_files = len(paths)
+    progress = tqdm(total_files, desc="Resize progress")
 
     for idx, path in enumerate(paths):
-        progress = tqdm(total=total_files, desc="Resize progress")
         progress.n = idx
         progress.refresh()
         file_path = os.path.basename(path)
@@ -107,10 +108,9 @@ def main():
             print(f"skipping file {file_path}")
             continue
         output_file = f"{os.path.dirname(path)}/{args.output}/{file_path}"
+        print("writing", output_file)
         if os.path.exists(output_file):
             print(f"file {file_path} exists, skipping")
-
-        # print('Testing', idx, imgname)
 
         img = cv2.imread(path, cv2.IMREAD_UNCHANGED)
         try:
