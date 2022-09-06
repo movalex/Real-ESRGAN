@@ -101,9 +101,9 @@ def main():
     for idx, path in enumerate(paths):
         progress.update()
 
-        if os.path.exists(path):
-            progress.update(total_files)
-            continue
+        # if os.path.exists(path):
+        #     progress.update(total_files)
+        #     continue
         imgname, extension = os.path.splitext(os.path.basename(path))
         print('Testing', idx, imgname)
 
