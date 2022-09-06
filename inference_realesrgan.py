@@ -96,13 +96,19 @@ def main():
     # skip directories from the path list
     paths = [path for path in paths if not os.path.isdir(path)]
     total_files = len(paths)
-    progress = tqdm(total=total_files, desc="Resize progress")
 
     for idx, path in enumerate(paths):
-        imgname, extension = os.path.splitext(os.path.basename(path))
+        progress = tqdm(total=total_files, desc="Resize progress")
+        progress.n = idx
+        progress.refresh()
+        file_path = os.path.basename(path)
+        imgname, extension = os.path.splitext(file_path)
         if not extension[1:] == args.ext:
-            print(f"skipping file {os.path.basename(path)}")
+            print(f"skipping file {file_path}")
             continue
+        output_file = f"{os.path.dirname(path)}/{args.output}/{file_path}"
+        if os.path.exists(output_file):
+            print(f"file {file_path} exists, skipping")
 
         # print('Testing', idx, imgname)
 
@@ -110,7 +116,7 @@ def main():
         try:
             shape = img.shape
         except AttributeError:
-            print(f"Error occured, skipping the file {os.path.basename(path)}")
+            print(f"Error occured, skipping the file {file_path}")
             continue
         if len(shape) == 3 and shape[2] == 4:
             img_mode = 'RGBA'
@@ -137,7 +143,6 @@ def main():
             else:
                 save_path = os.path.join(args.output, f'{imgname}_{args.suffix}.{extension}')
             cv2.imwrite(save_path, output)
-        progress.update()
 
 
 
