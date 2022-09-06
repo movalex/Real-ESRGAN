@@ -99,16 +99,20 @@ def main():
     progress = tqdm(total=total_files, desc="Resize progress")
 
     for idx, path in enumerate(paths):
-        progress.update()
-
-        # if os.path.exists(path):
-        #     progress.update(total_files)
-        #     continue
         imgname, extension = os.path.splitext(os.path.basename(path))
-        print('Testing', idx, imgname)
+        if not extension[1:] == args.ext:
+            print(f"skipping file {os.path.basename(path)}")
+            continue
+
+        # print('Testing', idx, imgname)
 
         img = cv2.imread(path, cv2.IMREAD_UNCHANGED)
-        if len(img.shape) == 3 and img.shape[2] == 4:
+        try:
+            shape = img.shape
+        except AttributeError:
+            print(f"Error occured, skipping the file {os.path.basename(path)}")
+            continue
+        if len(shape) == 3 and shape[2] == 4:
             img_mode = 'RGBA'
         else:
             img_mode = None
@@ -133,6 +137,8 @@ def main():
             else:
                 save_path = os.path.join(args.output, f'{imgname}_{args.suffix}.{extension}')
             cv2.imwrite(save_path, output)
+        progress.update()
+
 
 
 if __name__ == '__main__':
