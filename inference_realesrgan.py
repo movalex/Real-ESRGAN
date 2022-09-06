@@ -3,7 +3,6 @@ import cv2
 import glob
 import os
 from basicsr.archs.rrdbnet_arch import RRDBNet
-
 from tqdm.auto import tqdm
 
 from realesrgan import RealESRGANer
@@ -23,6 +22,7 @@ def main():
         help=('Model names: RealESRGAN_x4plus | RealESRNet_x4plus | RealESRGAN_x4plus_anime_6B | RealESRGAN_x2plus | '
               'realesr-animevideov3'))
     parser.add_argument('-o', '--output', type=str, default='results', help='Output folder')
+    parser.add_argument('--overwrite', action='store_true', help='Ovverwrite rendered files')
     parser.add_argument('-s', '--outscale', type=float, default=4, help='The final upsampling scale of the image')
     parser.add_argument('--suffix', type=str, default='', help='Suffix of the restored image')
     parser.add_argument('-t', '--tile', type=int, default=0, help='Tile size, 0 for no tile during testing')
@@ -97,26 +97,29 @@ def main():
     # skip directories from the path list
     paths = [path for path in paths if not os.path.isdir(path)]
     total_files = len(paths)
-    progress = tqdm(total_files, desc="Resize progress")
+    progress = tqdm(range(total_files), desc="Resize")
 
     for idx, path in enumerate(paths):
-        progress.n = idx
-        progress.refresh()
+
+        progress.n = idx + 1
         file_path = os.path.basename(path)
         imgname, extension = os.path.splitext(file_path)
         if not extension[1:] == args.ext:
-            print(f"skipping file {file_path}")
+            # print(f"skipping file {file_path}")
             continue
-        output_file = f"{os.path.dirname(path)}/{args.output}/{file_path}"
-        print("writing", output_file)
-        if os.path.exists(output_file):
-            print(f"file {file_path} exists, skipping")
+        output_file = f"{args.output}/{imgname}{extension}"
+
+        if os.path.exists(output_file) and not args.overwrite:
+            # print(f"file {file_path} exists, skipping")
+            continue
+
+        # print('Testing', idx, imgname)
 
         img = cv2.imread(path, cv2.IMREAD_UNCHANGED)
         try:
             shape = img.shape
         except AttributeError:
-            print(f"Error occured, skipping the file {file_path}")
+            # print(f"Error occured, skipping the file {file_path}")
             continue
         if len(shape) == 3 and shape[2] == 4:
             img_mode = 'RGBA'
@@ -143,8 +146,9 @@ def main():
             else:
                 save_path = os.path.join(args.output, f'{imgname}_{args.suffix}.{extension}')
             cv2.imwrite(save_path, output)
-
+        progress.refresh()
 
 
 if __name__ == '__main__':
     main()
+    print("Done!")
